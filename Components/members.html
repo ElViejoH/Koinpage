@@ -1,0 +1,107 @@
+﻿<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Gestion de miembros de la familia.">
+    <title>Miembros | Koin</title>
+    <link rel="stylesheet" href="../css/styles.css">
+  </head>
+  <body data-page="members">
+    <a class="skip-link" href="#contenido-principal">Saltar al contenido principal</a>
+
+    <header class="app-header">
+      <div class="app-header-inner container">
+        <a class="app-brand" href="../index.html"><img src="../assets/logo.png" alt="Koin" class="logo-image"></a>
+
+        <button class="app-menu-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="app-nav">
+          MenÃº
+        </button>
+
+        <nav id="app-nav" class="app-nav" aria-label="Menu principal">
+          <a class="app-nav-link" href="dashboard.html">Dashboard</a>
+          <a class="app-nav-link is-active" href="members.html" aria-current="page">Miembros</a>
+          <a class="app-nav-link" href="transactions.html">Transacciones</a>
+          <a class="app-nav-link" href="budgets.html">Presupuestos</a>
+        </nav>
+
+        <div class="app-user">
+          <span id="session-email"></span>
+          <button class="btn btn-outline app-logout" type="button" data-logout>Salir</button>
+        </div>
+      </div>
+    </header>
+
+    <main id="contenido-principal" class="app-main container">
+      <section class="members-top">
+        <h1>Miembros de la Familia</h1>
+        <button class="btn btn-primary" type="button" data-open-member>
+          Agregar Miembro
+        </button>
+      </section>
+
+      <section class="panel-card">
+        <div id="members-list"></div>
+      </section>
+
+      <dialog id="member-dialog" class="tx-dialog">
+        <form id="member-form" class="tx-form" method="dialog">
+          <h2 id="member-form-title">Nuevo Miembro</h2>
+          <input id="member-id" name="id" type="hidden">
+
+          <fieldset class="emoji-fieldset">
+            <legend>Emoji</legend>
+            <div id="emoji-grid" class="emoji-grid" role="radiogroup" aria-label="Selecciona un emoji">
+              <button type="button" class="emoji-option is-selected" data-emoji="🧑" role="radio" aria-checked="true">🧑</button>
+              <button type="button" class="emoji-option" data-emoji="👨" role="radio" aria-checked="false">👨</button>
+              <button type="button" class="emoji-option" data-emoji="👩" role="radio" aria-checked="false">👩</button>
+              <button type="button" class="emoji-option" data-emoji="👧" role="radio" aria-checked="false">👧</button>
+              <button type="button" class="emoji-option" data-emoji="👦" role="radio" aria-checked="false">👦</button>
+              <button type="button" class="emoji-option" data-emoji="👵" role="radio" aria-checked="false">👵</button>
+              <button type="button" class="emoji-option" data-emoji="👴" role="radio" aria-checked="false">👴</button>
+              <button type="button" class="emoji-option" data-emoji="🐶" role="radio" aria-checked="false">🐶</button>
+              <button type="button" class="emoji-option" data-emoji="🐱" role="radio" aria-checked="false">🐱</button>
+              <button type="button" class="emoji-option" data-emoji="🦁" role="radio" aria-checked="false">🦁</button>
+            </div>
+          </fieldset>
+
+          <div class="member-preview" aria-live="polite">
+            <span id="member-emoji-preview">🧑</span>
+          </div>
+
+          <div class="tx-field">
+            <label for="member-name">Nombre</label>
+            <input id="member-name" name="name" type="text" placeholder="Nombre completo" minlength="2" required>
+          </div>
+
+          <div class="tx-field">
+            <label for="member-role">Rol en la Familia</label>
+            <input id="member-role" name="role" type="text" placeholder="Ej: Padre, Madre, Hijo, Hija" minlength="2" required>
+          </div>
+
+          <input id="member-emoji-value" name="emoji" type="hidden" value="🧑">
+          <p id="member-message" class="form-message" role="status" aria-live="polite"></p>
+
+          <div class="tx-actions">
+            <button class="btn btn-outline" type="button" data-close-member>Cancelar</button>
+            <button id="member-submit" class="btn btn-primary" type="submit">Agregar Miembro</button>
+          </div>
+        </form>
+      </dialog>
+    </main>
+
+    <script src="../js/config.js"></script>
+    <script src="../js/storage-utils.js"></script>
+    <script src="../js/notices.js"></script>
+    <script src="../js/auth-shared.js"></script>
+    <script src="../js/session-routing.js"></script>
+    <script src="../js/dashboard-rendering.js"></script>
+    <script src="../js/budgets-members-render.js"></script>
+    <script src="../js/transactions-view.js"></script>
+    <script src="../js/page-initializers.js"></script>
+    <script src="../js/app.js"></script>
+  </body>
+</html>
+
+
+

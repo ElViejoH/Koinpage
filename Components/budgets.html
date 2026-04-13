@@ -1,0 +1,92 @@
+﻿<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Presupuestos en construccion.">
+    <title>Presupuestos | Koin</title>
+    <link rel="stylesheet" href="../css/styles.css">
+  </head>
+  <body data-page="budgets">
+    <a class="skip-link" href="#contenido-principal">Saltar al contenido principal</a>
+
+    <header class="app-header">
+      <div class="app-header-inner container">
+        <a class="app-brand" href="../index.html"><img src="../assets/logo.png" alt="Koin" class="logo-image"></a>
+        <button class="app-menu-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="app-nav">
+          MenÃº
+        </button>
+        <nav id="app-nav" class="app-nav" aria-label="Menu principal">
+          <a class="app-nav-link" href="dashboard.html">Dashboard</a>
+          <a class="app-nav-link" href="members.html">Miembros</a>
+          <a class="app-nav-link" href="transactions.html">Transacciones</a>
+          <a class="app-nav-link is-active" href="budgets.html" aria-current="page">Presupuestos</a>
+        </nav>
+        <div class="app-user">
+          <span id="session-email"></span>
+          <button class="btn btn-outline app-logout" type="button" data-logout>Salir</button>
+        </div>
+      </div>
+    </header>
+
+    <main id="contenido-principal" class="app-main container">
+      <section class="members-top">
+        <h1>Presupuestos Mensuales</h1>
+        <button class="btn btn-primary" type="button" data-open-budget>
+          Nuevo Presupuesto
+        </button>
+      </section>
+
+      <section class="panel-card">
+        <h2 id="budget-current-title">Presupuesto del mes actual</h2>
+        <div id="budget-current-content" class="panel-scroll"></div>
+      </section>
+
+      <section class="panel-card">
+        <h2>Todos los Presupuestos</h2>
+        <div id="budget-all-content" class="panel-scroll"></div>
+      </section>
+    </main>
+
+    <dialog id="budget-dialog" class="tx-dialog">
+      <form id="budget-form" class="tx-form" method="dialog">
+        <h2>Nuevo Presupuesto</h2>
+
+        <div class="tx-field">
+          <label for="budget-category">Categoria</label>
+          <input id="budget-category" name="category" type="text" placeholder="Ej: Alimentacion" required>
+        </div>
+
+        <div class="tx-field">
+          <label for="budget-month">Mes</label>
+          <input id="budget-month" name="month" type="month" required>
+        </div>
+
+        <div class="tx-field">
+          <label for="budget-limit">Tope de gasto</label>
+          <input id="budget-limit" name="limit" type="number" min="1" step="0.01" required>
+        </div>
+
+        <p id="budget-message" class="form-message" role="status" aria-live="polite"></p>
+
+        <div class="tx-actions">
+          <button class="btn btn-outline" type="button" data-close-budget>Cancelar</button>
+          <button class="btn btn-primary" type="submit">Guardar Presupuesto</button>
+        </div>
+      </form>
+    </dialog>
+    <script src="../js/config.js"></script>
+    <script src="../js/storage-utils.js"></script>
+    <script src="../js/notices.js"></script>
+    <script src="../js/auth-shared.js"></script>
+    <script src="../js/session-routing.js"></script>
+    <script src="../js/dashboard-rendering.js"></script>
+    <script src="../js/budgets-members-render.js"></script>
+    <script src="../js/transactions-view.js"></script>
+    <script src="../js/page-initializers.js"></script>
+    <script src="../js/app.js"></script>
+  </body>
+</html>
+
+
+

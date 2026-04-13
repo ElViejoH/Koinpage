@@ -1,0 +1,149 @@
+﻿<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Transacciones en construccion.">
+    <title>Transacciones | Koin</title>
+    <link rel="stylesheet" href="../css/styles.css">
+  </head>
+  <body data-page="transactions">
+    <a class="skip-link" href="#contenido-principal">Saltar al contenido principal</a>
+
+    <header class="app-header">
+      <div class="app-header-inner container">
+        <a class="app-brand" href="../index.html"><img src="../assets/logo.png" alt="Koin" class="logo-image"></a>
+        <button class="app-menu-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="app-nav">
+          MenÃº
+        </button>
+        <nav id="app-nav" class="app-nav" aria-label="Menu principal">
+          <a class="app-nav-link" href="dashboard.html">Dashboard</a>
+          <a class="app-nav-link" href="members.html">Miembros</a>
+          <a class="app-nav-link is-active" href="transactions.html" aria-current="page">Transacciones</a>
+          <a class="app-nav-link" href="budgets.html">Presupuestos</a>
+        </nav>
+        <div class="app-user">
+          <span id="session-email"></span>
+          <button class="btn btn-outline app-logout" type="button" data-logout>Salir</button>
+        </div>
+      </div>
+    </header>
+
+    <main id="contenido-principal" class="app-main container">
+      <section class="dashboard-top">
+        <h1>Historial de Transacciones</h1>
+        <button class="btn btn-primary" type="button" data-open-transaction-page>
+          Nueva Transaccion
+        </button>
+      </section>
+
+      <section class="stats-row" aria-live="polite">
+        <article class="metric-card">
+          <p class="metric-label">Balance</p>
+          <p id="tx-metric-balance" class="metric-value metric-balance">$0</p>
+        </article>
+        <article class="metric-card">
+          <p class="metric-label">Ingresos</p>
+          <p id="tx-metric-income" class="metric-value metric-income">$0</p>
+        </article>
+        <article class="metric-card">
+          <p class="metric-label">Gastos</p>
+          <p id="tx-metric-expense" class="metric-value metric-expense">$0</p>
+        </article>
+      </section>
+
+      <section class="panel-card">
+        <h2>Filtros</h2>
+        <div class="filters-grid">
+          <div class="tx-field">
+            <label for="filter-member">Filtrar por Miembro</label>
+            <select id="filter-member"></select>
+          </div>
+          <div class="tx-field">
+            <label for="filter-type">Filtrar por Tipo</label>
+            <select id="filter-type">
+              <option value="all">Todos</option>
+              <option value="income">Ingresos</option>
+              <option value="expense">Gastos</option>
+            </select>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel-card">
+        <h2 id="tx-count-title">Todas las Transacciones (0)</h2>
+        <div id="transactions-table-container" class="panel-scroll"></div>
+      </section>
+    </main>
+
+    <dialog id="transaction-page-dialog" class="tx-dialog">
+      <form id="transaction-page-form" class="tx-form" method="dialog">
+        <h2 id="tx-page-form-title">Nueva Transaccion</h2>
+        <input id="tx-page-id" name="id" type="hidden">
+
+        <div class="tx-field">
+          <label for="tx-page-member">Miembro</label>
+          <select id="tx-page-member" name="memberId" required></select>
+        </div>
+
+        <div class="tx-field">
+          <label for="tx-page-type">Tipo</label>
+          <select id="tx-page-type" name="type" required>
+            <option value="income">Ingreso</option>
+            <option value="expense">Gasto</option>
+          </select>
+        </div>
+
+        <div class="tx-field">
+          <label for="tx-page-amount">Monto</label>
+          <input id="tx-page-amount" name="amount" type="number" min="1" step="0.01" required>
+        </div>
+
+        <div class="tx-field">
+          <label for="tx-page-category">Categoria</label>
+          <select id="tx-page-category" name="category" required></select>
+        </div>
+
+        <div class="tx-field" id="tx-page-category-custom-wrap" hidden>
+          <label for="tx-page-category-custom">Nombre de la categoria</label>
+          <input
+            id="tx-page-category-custom"
+            name="categoryCustom"
+            type="text"
+            placeholder="Escribe la categoria"
+          >
+        </div>
+
+        <div class="tx-field">
+          <label for="tx-page-date">Fecha</label>
+          <input id="tx-page-date" name="date" type="date" required>
+        </div>
+
+        <div class="tx-field">
+          <label for="tx-page-description">Descripcion</label>
+          <input id="tx-page-description" name="description" type="text" placeholder="Detalle opcional">
+        </div>
+
+        <p id="tx-page-message" class="form-message" role="status" aria-live="polite"></p>
+
+        <div class="tx-actions">
+          <button class="btn btn-outline" type="button" data-close-transaction-page>Cancelar</button>
+          <button id="tx-page-submit" class="btn btn-primary" type="submit">Guardar</button>
+        </div>
+      </form>
+    </dialog>
+    <script src="../js/config.js"></script>
+    <script src="../js/storage-utils.js"></script>
+    <script src="../js/notices.js"></script>
+    <script src="../js/auth-shared.js"></script>
+    <script src="../js/session-routing.js"></script>
+    <script src="../js/dashboard-rendering.js"></script>
+    <script src="../js/budgets-members-render.js"></script>
+    <script src="../js/transactions-view.js"></script>
+    <script src="../js/page-initializers.js"></script>
+    <script src="../js/app.js"></script>
+  </body>
+</html>
+
+
+
