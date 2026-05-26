@@ -119,4 +119,51 @@ Estructura de Carpetas
 
 🚀 8. Instalación y Ejecución
 
-Para ejecutar el proyecto, simplemente abre el archivo index.html en un navegador web. No se requieren dependencias adicionales ni instalación de software.
+El proyecto ya no se ejecuta solo abriendo `index.html`. Ahora tiene un backend Express y una base de datos PostgreSQL.
+
+Requisitos:
+
+- Node.js 20 o superior
+- Una base de datos PostgreSQL, idealmente en Supabase
+
+Variables de entorno necesarias:
+
+- `DATABASE_URL`: cadena de conexión de Supabase/PostgreSQL
+- `DATABASE_SSL`: usa `require` para Supabase
+- `JWT_SECRET`: secreto para firmar tokens
+- `FRONTEND_URL`: URL pública del frontend, por ejemplo `https://tu-app.vercel.app`
+
+Pasos de arranque local:
+
+1. Instala dependencias con `npm install`
+2. Configura las variables de entorno
+3. Ejecuta el esquema con `npm run db:schema`
+4. Si deseas migrar datos locales desde `.data/db.json`, ejecuta `npm run db:import-lowdb`
+5. Inicia el servidor con `npm run dev`
+6. Abre `http://localhost:3000`
+
+🌩️ 9. Despliegue Recomendado
+
+Arquitectura objetivo:
+
+- Supabase: PostgreSQL
+- Render: backend y API Express
+- Vercel: frontend estático
+
+Render:
+
+- Usa el archivo `render.yaml`
+- Define `DATABASE_URL`, `DATABASE_SSL`, `FRONTEND_URL` y `JWT_SECRET`
+- El health check es `/health`
+
+Vercel:
+
+- Usa el archivo `vercel.json`
+- Define `APP_API_BASE_URL` con la URL pública del backend en Render
+- Vercel construirá el frontend estático en `dist/`
+
+🗃️ 10. Esquema y Migración
+
+- El esquema SQL base está en `database/schema.sql`
+- El script `scripts/apply-schema.mjs` aplica ese esquema
+- El script `scripts/import-lowdb.mjs` importa los datos históricos de `.data/db.json`
