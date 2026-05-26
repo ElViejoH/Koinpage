@@ -68,9 +68,11 @@ function last7Days() {
 }
 
 function getNameFromSession(session) {
-  if (!session || !session.email) return "usuario";
-  if (session.name) return session.name;
-  return String(session.email).split("@")[0];
+  if (!session) return "usuario";
+  if (session.user && session.user.name) return session.user.name;
+  if (session.user && session.user.email) return String(session.user.email).split("@")[0];
+  if (session.email) return String(session.email).split("@")[0];
+  return "usuario";
 }
 
 function escapeHtml(text) {

@@ -2,23 +2,6 @@
 
 // ===== Global auth and shared UI behavior =====
 // Maneja autenticación de formularios y comportamientos compartidos de navegación/feedback visual.
-
-function initializeInitialMember(userName) {
-  const members = loadList(STORAGE_MEMBERS);
-  
-  // Solo crear miembro inicial si no existen miembros
-  if (members.length === 0 && userName) {
-    const initialMember = {
-      id: "m-" + String(Date.now()),
-      name: userName,
-      role: "Propietario",
-      emoji: "🧑"
-    };
-    members.push(initialMember);
-    saveList(STORAGE_MEMBERS, members);
-  }
-}
-
 function initAuthForms() {
   const forms = document.querySelectorAll("[data-auth-form]");
   if (!forms.length) return;
@@ -51,50 +34,27 @@ function initAuthForms() {
       }
 
       if (form.id === "login-form") {
+        event.preventDefault();
         const email = String(form.querySelector('[name="email"]').value).trim().toLowerCase();
         const password = String(form.querySelector('[name="password"]').value);
 
-        // Validar contra usuarios registrados o demo user
-        const registeredUsers = loadList(STORAGE_REGISTERED_USERS);
-        let validUser = null;
-
-        if (email === DEMO_USER.email && password === DEMO_USER.password) {
-          validUser = DEMO_USER;
-        } else {
-          validUser = registeredUsers.find(function (user) {
-            return user.email === email && user.password === password;
+        api.auth
+          .login(email, password)
+          .then(function () {
+            window.location.href = "dashboard.html";
+          })
+          .catch(function (err) {
+            showMessage(message, err && err.message ? err.message : "No se pudo iniciar sesión.", true);
           });
-        }
-
-        if (!validUser) {
-          event.preventDefault();
-          showMessage(
-            message,
-            "Credenciales invalidas. Verifica tu email y contrasena.",
-            true
-          );
-          return;
-        }
-
-        event.preventDefault();
-        localStorage.setItem(
-          SESSION_KEY,
-          JSON.stringify({ email: validUser.email, name: validUser.name })
-        );
-        
-        // Crear miembro inicial si no existen miembros
-        initializeInitialMember(validUser.name);
-        
-        window.location.href = "dashboard.html";
         return;
       }
 
       if (form.id === "register-form") {
+        event.preventDefault();
         const pass = form.querySelector('[name="password"]');
         const confirm = form.querySelector('[name="passwordConfirm"]');
 
         if (pass && confirm && pass.value !== confirm.value) {
-          event.preventDefault();
           confirm.setCustomValidity("Las contrasenas no coinciden.");
           confirm.setAttribute("aria-invalid", "true");
           showMessage(message, "Las contrasenas no coinciden.", true);
@@ -102,32 +62,23 @@ function initAuthForms() {
           return;
         }
 
-        // Guardar usuario registrado
-        const formData = new FormData(form);
-        const registeredUsers = loadList(STORAGE_REGISTERED_USERS);
-        const newUser = {
-          id: "u-" + String(Date.now()),
-          email: String(formData.get("email") || "").trim().toLowerCase(),
-          name: String(formData.get("name") || "").trim(),
-          password: String(formData.get("password") || "")
-        };
+        const name = String(form.querySelector('[name="name"]').value || "").trim();
+        const email = String(form.querySelector('[name="email"]').value || "").trim().toLowerCase();
+        const password = String(pass ? pass.value : "");
 
-        registeredUsers.push(newUser);
-        saveList(STORAGE_REGISTERED_USERS, registeredUsers);
-
-        event.preventDefault();
-        showMessage(message, "Cuenta creada exitosamente. Inicia sesion para continuar.", false);
-        form.reset();
-        // Redirigir a login después de 2 segundos
-        setTimeout(function () {
-          window.location.href = "login.html";
-        }, 2000);
+        api.auth
+          .register(name, email, password)
+          .then(function () {
+            window.location.href = "dashboard.html";
+          })
+          .catch(function (err) {
+            showMessage(message, err && err.message ? err.message : "No se pudo registrar.", true);
+          });
         return;
       }
 
       event.preventDefault();
-      showMessage(message, "Formulario valido. Conexion lista para backend.", false);
-      form.reset();
+      showMessage(message, "Formulario valido.", false);
     });
   });
 }

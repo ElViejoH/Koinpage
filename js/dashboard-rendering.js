@@ -6,7 +6,7 @@ function renderDashboard(state) {
   renderMetrics(state.transactions);
   renderCategoryExpenses(state.transactions);
   renderWeeklyStats(state.transactions);
-  renderRecentMoves(state.transactions);
+  renderRecentMoves(state.transactions, state.members);
   renderMembersWarning(state.members);
   renderBudgetWarnings(state.budgets, state.transactions);
 }
@@ -115,10 +115,10 @@ function renderWeeklyStats(transactions) {
     "</tbody></table>";
 }
 
-function renderRecentMoves(transactions) {
+function renderRecentMoves(transactions, members) {
   const container = document.querySelector("#recent-moves");
   if (!container) return;
-  const members = loadList(STORAGE_MEMBERS);
+  const membersList = Array.isArray(members) ? members : [];
 
   if (!transactions.length) {
     container.innerHTML = '<p class="empty-state">No hay movimientos registrados</p>';
@@ -139,7 +139,7 @@ function renderRecentMoves(transactions) {
         "<tr><td>" +
         escapeHtml(item.date) +
         "</td><td>" +
-        escapeHtml(getMemberName(item.memberId, members)) +
+        escapeHtml(getMemberName(item.memberId, membersList)) +
         "</td><td>" +
         escapeHtml(typeLabel) +
         "</td><td>" +
@@ -181,7 +181,7 @@ function syncMemberSelectOptions(selectNode, members, required) {
     : '<option value="all">Todos los miembros</option>';
   const options = members
     .map(function (member) {
-      const label = (member.emoji || "ðŸ§‘") + " " + (member.name || "Miembro");
+      const label = (member.emoji || "🧑") + " " + (member.name || "Miembro");
       return '<option value="' + escapeHtml(member.id) + '">' + escapeHtml(label) + "</option>";
     })
     .join("");
@@ -195,7 +195,7 @@ function syncFilterMemberOptions(selectNode, members) {
 
   const options = members
     .map(function (member) {
-      const label = (member.emoji || "ðŸ§‘") + " " + (member.name || "Miembro");
+      const label = (member.emoji || "🧑") + " " + (member.name || "Miembro");
       return '<option value="' + escapeHtml(member.id) + '">' + escapeHtml(label) + "</option>";
     })
     .join("");

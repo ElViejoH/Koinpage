@@ -2,11 +2,28 @@
 
 // ===== Page initializers =====
 // Define la carga principal de cada vista (dashboard, miembros, presupuestos y transacciones).
+function replaceArray(target, source) {
+  if (!Array.isArray(target)) return;
+  const next = Array.isArray(source) ? source : [];
+  target.splice(0, target.length);
+  next.forEach(function (item) {
+    target.push(item);
+  });
+}
+
+function upsertById(list, item) {
+  const idx = list.findIndex(function (x) {
+    return x.id === item.id;
+  });
+  if (idx >= 0) list[idx] = item;
+  else list.push(item);
+}
+
 function initDashboard() {
   const state = {
-    transactions: loadList(STORAGE_TRANSACTIONS),
-    members: loadList(STORAGE_MEMBERS),
-    budgets: loadList(STORAGE_BUDGETS)
+    transactions: [],
+    members: [],
+    budgets: []
   };
   const dialog = document.querySelector("#transaction-dialog");
   const openButton = document.querySelector("[data-open-transaction]");
@@ -85,8 +102,8 @@ function initDashboard() {
         return;
       }
 
-      state.transactions.push(
-        buildTransaction({
+      api.transactions
+        .create({
           memberId: memberId,
           type: type,
           amount: amount,
@@ -94,33 +111,53 @@ function initDashboard() {
           date: date,
           description: description
         })
-      );
-
-      saveList(STORAGE_TRANSACTIONS, state.transactions);
-      const overBudget = getBudgetOverrunForTransaction(state.budgets, state.transactions, {
-        type: type,
-        amount: amount,
-        category: category,
-        date: date
-      });
-      form.reset();
-      if (dateInput) dateInput.value = todayIso();
-      syncMemberSelectOptions(memberSelect, state.members, true);
-      refreshDashboardCategories(false);
-      if (dialog) dialog.close();
-      renderDashboard(state);
-      if (overBudget) {
-        showNotice(overBudget, "warning");
-      }
+        .then(function (resp) {
+          const tx = resp && resp.transaction ? resp.transaction : null;
+          if (tx) upsertById(state.transactions, tx);
+          const overBudget = getBudgetOverrunForTransaction(state.budgets, state.transactions, {
+            type: type,
+            amount: amount,
+            category: category,
+            date: date
+          });
+          form.reset();
+          if (dateInput) dateInput.value = todayIso();
+          syncMemberSelectOptions(memberSelect, state.members, true);
+          refreshDashboardCategories(false);
+          if (dialog) dialog.close();
+          renderDashboard(state);
+          if (overBudget) showNotice(overBudget, "warning");
+          else showNotice("Transaccion creada correctamente.", "info");
+        })
+        .catch(function (err) {
+          showMessage(message, err && err.message ? err.message : "No se pudo guardar la transacción.", true);
+        });
     });
   }
+
+  Promise.all([api.transactions.list(), api.members.list(), api.budgets.list()])
+    .then(function (results) {
+      const txResp = results[0] || {};
+      const membersResp = results[1] || {};
+      const budgetsResp = results[2] || {};
+      replaceArray(state.transactions, txResp.transactions);
+      replaceArray(state.members, membersResp.members);
+      replaceArray(state.budgets, budgetsResp.budgets);
+      syncMemberSelectOptions(memberSelect, state.members, true);
+      refreshDashboardCategories(false);
+      renderDashboard(state);
+    })
+    .catch(function (err) {
+      showNotice(err && err.message ? err.message : "No se pudo cargar la información.", "warning");
+      renderDashboard(state);
+    });
 
   renderDashboard(state);
 }
 
 function initMembersPage() {
   const state = {
-    members: loadList(STORAGE_MEMBERS)
+    members: []
   };
   const listContainer = document.querySelector("#members-list");
   const dialog = document.querySelector("#member-dialog");
@@ -202,14 +239,21 @@ function initMembersPage() {
       const deleteBtn = event.target.closest("[data-delete-member]");
       if (deleteBtn) {
         const id = String(deleteBtn.getAttribute("data-delete-member") || "");
-        const nextMembers = state.members.filter(function (item) {
-          return item.id !== id;
-        });
-        if (nextMembers.length === state.members.length) return;
-        state.members = nextMembers;
-        saveList(STORAGE_MEMBERS, state.members);
-        renderMembersList(state.members);
-        showNotice("Miembro eliminado correctamente.", "info");
+        api.members
+          .remove(id)
+          .then(function () {
+            replaceArray(
+              state.members,
+              state.members.filter(function (item) {
+                return item.id !== id;
+              })
+            );
+            renderMembersList(state.members);
+            showNotice("Miembro eliminado correctamente.", "info");
+          })
+          .catch(function (err) {
+            showNotice(err && err.message ? err.message : "No se pudo eliminar el miembro.", "warning");
+          });
       }
     });
 
@@ -237,45 +281,51 @@ function initMembersPage() {
       }
 
       const payload = {
-        id: memberId || ("m-" + String(Date.now())),
         emoji: emoji,
         name: name,
         role: role
       };
-      const existingIndex = state.members.findIndex(function (item) {
-        return item.id === memberId;
-      });
-      if (existingIndex >= 0) {
-        state.members[existingIndex] = payload;
-      } else {
-        state.members.push(payload);
-      }
+      const isEdit = Boolean(memberId);
+      const op = isEdit ? api.members.update(memberId, payload) : api.members.create(payload);
 
-      saveList(STORAGE_MEMBERS, state.members);
-      renderMembersList(state.members);
-      resetMemberForm(
-        form,
-        memberIdInput,
-        formTitle,
-        formSubmit,
-        emojiOptions,
-        emojiInput,
-        emojiPreview
-      );
-      showNotice(
-        existingIndex >= 0 ? "Miembro actualizado correctamente." : "Miembro agregado correctamente.",
-        "info"
-      );
-      if (dialog) dialog.close();
+      op
+        .then(function (resp) {
+          const member = resp && resp.member ? resp.member : null;
+          if (member) upsertById(state.members, member);
+          renderMembersList(state.members);
+          resetMemberForm(
+            form,
+            memberIdInput,
+            formTitle,
+            formSubmit,
+            emojiOptions,
+            emojiInput,
+            emojiPreview
+          );
+          showNotice(isEdit ? "Miembro actualizado correctamente." : "Miembro agregado correctamente.", "info");
+          if (dialog) dialog.close();
+        })
+        .catch(function (err) {
+          showMessage(message, err && err.message ? err.message : "No se pudo guardar el miembro.", true);
+        });
     });
   }
 
-  renderMembersList(state.members);
+  api.members
+    .list()
+    .then(function (resp) {
+      replaceArray(state.members, resp.members);
+      renderMembersList(state.members);
+    })
+    .catch(function (err) {
+      showNotice(err && err.message ? err.message : "No se pudieron cargar los miembros.", "warning");
+      renderMembersList(state.members);
+    });
 }
 function initBudgetsPage() {
   const state = {
-    budgets: loadList(STORAGE_BUDGETS),
-    transactions: loadList(STORAGE_TRANSACTIONS)
+    budgets: [],
+    transactions: []
   };
   const dialog = document.querySelector("#budget-dialog");
   const openButton = document.querySelector("[data-open-budget]");
@@ -315,47 +365,29 @@ function initBudgetsPage() {
         return;
       }
 
-      if (id) {
-        // Edit existing
-        const existingIndex = state.budgets.findIndex(function (item) {
-          return item.id === id;
-        });
-        if (existingIndex >= 0) {
-          state.budgets[existingIndex] = {
-            id: id,
-            category: category,
-            month: month,
-            limit: limit
-          };
-        }
-      } else {
-        // Add new or update if same category/month
-        const existing = state.budgets.find(function (item) {
-          return item.category.toLowerCase() === category.toLowerCase() && item.month === month;
-        });
+      const op = id
+        ? api.budgets.update(id, { category: category, month: month, limit: limit })
+        : api.budgets.create({ category: category, month: month, limit: limit });
 
-        if (existing) {
-          existing.limit = limit;
-        } else {
-          state.budgets.push({
-            id: "b-" + String(Date.now()) + "-" + Math.floor(Math.random() * 1000),
-            category: category,
-            month: month,
-            limit: limit
-          });
-        }
-      }
+      op
+        .then(function (resp) {
+          const budget = resp && resp.budget ? resp.budget : null;
+          if (budget) upsertById(state.budgets, budget);
 
-      saveList(STORAGE_BUDGETS, state.budgets);
-      form.reset();
-      if (monthInput) monthInput.value = currentMonthIso();
-      if (dialog) dialog.close();
-      // Reset form state
-      document.querySelector("#budget-form-title").textContent = "Nuevo Presupuesto";
-      document.querySelector("#budget-submit").textContent = "Guardar Presupuesto";
-      const idInput = document.querySelector("#budget-id");
-      if (idInput) idInput.remove();
-      renderBudgetsPage(state);
+          form.reset();
+          if (monthInput) monthInput.value = currentMonthIso();
+          if (dialog) dialog.close();
+          // Reset form state
+          document.querySelector("#budget-form-title").textContent = "Nuevo Presupuesto";
+          document.querySelector("#budget-submit").textContent = "Guardar Presupuesto";
+          const idInput = document.querySelector("#budget-id");
+          if (idInput) idInput.remove();
+          renderBudgetsPage(state);
+          showNotice(id ? "Presupuesto actualizado correctamente." : "Presupuesto guardado correctamente.", "info");
+        })
+        .catch(function (err) {
+          showMessage(message, err && err.message ? err.message : "No se pudo guardar el presupuesto.", true);
+        });
     });
   }
 
@@ -386,9 +418,12 @@ function initBudgetsPage() {
         closeAllBudgetMenus(currentContainer);
         closeAllBudgetMenus(allContainer);
         // Fill form for edit
-        setSelectValue(document.querySelector("#budget-category"), budget.category);
-        setSelectValue(document.querySelector("#budget-month"), budget.month);
-        document.querySelector("#budget-limit").value = budget.limit;
+        const categoryInput = document.querySelector("#budget-category");
+        const monthInput = document.querySelector("#budget-month");
+        const limitInput = document.querySelector("#budget-limit");
+        if (categoryInput) categoryInput.value = budget.category;
+        if (monthInput) monthInput.value = budget.month;
+        if (limitInput) limitInput.value = budget.limit;
         document.querySelector("#budget-form-title").textContent = "Editar Presupuesto";
         document.querySelector("#budget-submit").textContent = "Actualizar Presupuesto";
         // Add hidden id
@@ -409,16 +444,23 @@ function initBudgetsPage() {
       const deleteBtn = event.target.closest("[data-delete-budget]");
       if (deleteBtn) {
         const id = String(deleteBtn.getAttribute("data-delete-budget") || "");
-        const nextBudgets = state.budgets.filter(function (item) {
-          return item.id !== id;
-        });
-        if (nextBudgets.length === state.budgets.length) return;
-        state.budgets = nextBudgets;
-        saveList(STORAGE_BUDGETS, state.budgets);
-        closeAllBudgetMenus(currentContainer);
-        closeAllBudgetMenus(allContainer);
-        renderBudgetsPage(state);
-        showNotice("Presupuesto eliminado correctamente.", "info");
+        api.budgets
+          .remove(id)
+          .then(function () {
+            replaceArray(
+              state.budgets,
+              state.budgets.filter(function (item) {
+                return item.id !== id;
+              })
+            );
+            closeAllBudgetMenus(currentContainer);
+            closeAllBudgetMenus(allContainer);
+            renderBudgetsPage(state);
+            showNotice("Presupuesto eliminado correctamente.", "info");
+          })
+          .catch(function (err) {
+            showNotice(err && err.message ? err.message : "No se pudo eliminar el presupuesto.", "warning");
+          });
       }
     });
   });
@@ -430,14 +472,25 @@ function initBudgetsPage() {
     }
   });
 
-  renderBudgetsPage(state);
+  Promise.all([api.budgets.list(), api.transactions.list()])
+    .then(function (results) {
+      const budgetsResp = results[0] || {};
+      const txResp = results[1] || {};
+      replaceArray(state.budgets, budgetsResp.budgets);
+      replaceArray(state.transactions, txResp.transactions);
+      renderBudgetsPage(state);
+    })
+    .catch(function (err) {
+      showNotice(err && err.message ? err.message : "No se pudo cargar la información.", "warning");
+      renderBudgetsPage(state);
+    });
 }
 
 function initTransactionsPage() {
   const state = {
-    members: loadList(STORAGE_MEMBERS),
-    transactions: loadList(STORAGE_TRANSACTIONS),
-    budgets: loadList(STORAGE_BUDGETS)
+    members: [],
+    transactions: [],
+    budgets: []
   };
   const filterMember = document.querySelector("#filter-member");
   const filterType = document.querySelector("#filter-type");
@@ -536,41 +589,55 @@ function initTransactionsPage() {
         return;
       }
 
-      upsertTransaction(state.transactions, {
-        id: transactionId,
-        memberId: memberId,
-        type: type,
-        amount: amount,
-        category: category,
-        date: date,
-        description: description
-      });
-      saveList(STORAGE_TRANSACTIONS, state.transactions);
-      const overBudget = getBudgetOverrunForTransaction(state.budgets, state.transactions, {
-        type: type,
-        amount: amount,
-        category: category,
-        date: date
-      });
+      const op = transactionId
+        ? api.transactions.update(transactionId, {
+          memberId: memberId,
+          type: type,
+          amount: amount,
+          category: category,
+          date: date,
+          description: description
+        })
+        : api.transactions.create({
+          memberId: memberId,
+          type: type,
+          amount: amount,
+          category: category,
+          date: date,
+          description: description
+        });
 
-      resetTransactionFormToCreate(form, formId, formTitle, formSubmit, formDate);
-      syncMemberSelectOptions(formMember, state.members, true);
-      refreshTransactionCategories(false);
-      if (dialog) dialog.close();
+      op
+        .then(function (resp) {
+          const tx = resp && resp.transaction ? resp.transaction : null;
+          if (tx) upsertById(state.transactions, tx);
 
-      renderTransactionsPage(
-        state,
-        filterMember ? filterMember.value : "all",
-        filterType ? filterType.value : "all"
-      );
-      if (overBudget) {
-        showNotice(overBudget, "warning");
-      } else {
-        showNotice(
-          transactionId ? "Transaccion actualizada correctamente." : "Transaccion creada correctamente.",
-          "info"
-        );
-      }
+          const overBudget = getBudgetOverrunForTransaction(state.budgets, state.transactions, {
+            type: type,
+            amount: amount,
+            category: category,
+            date: date
+          });
+
+          resetTransactionFormToCreate(form, formId, formTitle, formSubmit, formDate);
+          syncMemberSelectOptions(formMember, state.members, true);
+          refreshTransactionCategories(false);
+          if (dialog) dialog.close();
+
+          renderTransactionsPage(
+            state,
+            filterMember ? filterMember.value : "all",
+            filterType ? filterType.value : "all"
+          );
+          if (overBudget) {
+            showNotice(overBudget, "warning");
+          } else {
+            showNotice(transactionId ? "Transaccion actualizada correctamente." : "Transaccion creada correctamente.", "info");
+          }
+        })
+        .catch(function (err) {
+          showMessage(message, err && err.message ? err.message : "No se pudo guardar la transacción.", true);
+        });
     });
   }
 
@@ -607,19 +674,26 @@ function initTransactionsPage() {
       const deleteButton = event.target.closest("[data-delete-transaction]");
       if (deleteButton) {
         const id = String(deleteButton.getAttribute("data-delete-transaction") || "");
-        const nextTransactions = state.transactions.filter(function (item) {
-          return item.id !== id;
-        });
-        if (nextTransactions.length === state.transactions.length) return;
-        state.transactions = nextTransactions;
-        saveList(STORAGE_TRANSACTIONS, state.transactions);
-        closeAllTransactionMenus(tableContainer);
-        renderTransactionsPage(
-          state,
-          filterMember ? filterMember.value : "all",
-          filterType ? filterType.value : "all"
-        );
-        showNotice("Transacción eliminada correctamente.", "info");
+        api.transactions
+          .remove(id)
+          .then(function () {
+            replaceArray(
+              state.transactions,
+              state.transactions.filter(function (item) {
+                return item.id !== id;
+              })
+            );
+            closeAllTransactionMenus(tableContainer);
+            renderTransactionsPage(
+              state,
+              filterMember ? filterMember.value : "all",
+              filterType ? filterType.value : "all"
+            );
+            showNotice("Transacción eliminada correctamente.", "info");
+          })
+          .catch(function (err) {
+            showNotice(err && err.message ? err.message : "No se pudo eliminar la transacción.", "warning");
+          });
       }
     });
 
@@ -630,5 +704,21 @@ function initTransactionsPage() {
     });
   }
 
-  renderTransactionsPage(state, filterMember ? filterMember.value : "all", filterType ? filterType.value : "all");
+  Promise.all([api.members.list(), api.transactions.list(), api.budgets.list()])
+    .then(function (results) {
+      const membersResp = results[0] || {};
+      const txResp = results[1] || {};
+      const budgetsResp = results[2] || {};
+      replaceArray(state.members, membersResp.members);
+      replaceArray(state.transactions, txResp.transactions);
+      replaceArray(state.budgets, budgetsResp.budgets);
+      syncFilterMemberOptions(filterMember, state.members);
+      syncMemberSelectOptions(formMember, state.members, true);
+      refreshTransactionCategories(false);
+      renderTransactionsPage(state, filterMember ? filterMember.value : "all", filterType ? filterType.value : "all");
+    })
+    .catch(function (err) {
+      showNotice(err && err.message ? err.message : "No se pudo cargar la información.", "warning");
+      renderTransactionsPage(state, filterMember ? filterMember.value : "all", filterType ? filterType.value : "all");
+    });
 }

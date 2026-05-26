@@ -41,7 +41,9 @@ function initSessionFlow() {
 function getSession() {
   try {
     const raw = localStorage.getItem(SESSION_KEY);
-    return raw ? JSON.parse(raw) : null;
+    const parsed = raw ? JSON.parse(raw) : null;
+    if (!parsed || !parsed.token) return null;
+    return parsed;
   } catch (_) {
     return null;
   }
@@ -56,8 +58,14 @@ function bindHeaderSession(session) {
   const logoutButton = document.querySelector("[data-logout]");
   if (logoutButton) {
     logoutButton.addEventListener("click", function () {
-      localStorage.removeItem(SESSION_KEY);
-      window.location.href = "login.html";
+      api.auth
+        .logout()
+        .then(function () {
+          window.location.href = "login.html";
+        })
+        .catch(function () {
+          window.location.href = "login.html";
+        });
     });
   }
 }
