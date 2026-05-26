@@ -24,6 +24,20 @@ function getAllowedOrigins() {
     .filter(Boolean);
 }
 
+function isAllowedOrigin(origin, allowedOrigins) {
+  if (allowedOrigins.includes(origin)) return true;
+
+  try {
+    const parsed = new URL(origin);
+    if (parsed.hostname === "localhost" || parsed.hostname === "127.0.0.1") return true;
+    if (parsed.hostname.endsWith(".vercel.app")) return true;
+  } catch (_error) {
+    return false;
+  }
+
+  return false;
+}
+
 const allowedOrigins = getAllowedOrigins();
 const isProduction = process.env.NODE_ENV === "production";
 
@@ -31,7 +45,7 @@ app.use(cors({
   origin(origin, callback) {
     if (!origin) return callback(null, true);
     if (!isProduction) return callback(null, true);
-    if (allowedOrigins.includes(origin)) return callback(null, true);
+    if (isAllowedOrigin(origin, allowedOrigins)) return callback(null, true);
     return callback(new Error("Origin not allowed"));
   }
 }));
