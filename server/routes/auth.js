@@ -34,11 +34,22 @@ export function authRouter() {
 
       const passwordHash = await bcrypt.hash(password, 10);
       const id = `u_${nanoid(10)}`;
-      const rows = await sql`
-        insert into users (id, name, email, password_hash)
-        values (${id}, ${name}, ${email}, ${passwordHash})
-        returning id, name, email
-      `;
+      const memberId = `m_${nanoid(10)}`;
+      const defaultMemberRole = "Titular";
+      const defaultMemberEmoji = "🧑";
+
+      const rows = await sql.begin(async (tx) => {
+        const userRows = await tx`
+          insert into users (id, name, email, password_hash)
+          values (${id}, ${name}, ${email}, ${passwordHash})
+          returning id, name, email
+        `;
+        await tx`
+          insert into members (id, user_id, name, role, emoji)
+          values (${memberId}, ${id}, ${name}, ${defaultMemberRole}, ${defaultMemberEmoji})
+        `;
+        return userRows;
+      });
 
       const user = mapUser(rows[0]);
       const token = signToken({ sub: user.id, email: user.email, name: user.name });
