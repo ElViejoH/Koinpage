@@ -20,8 +20,8 @@
             <img src="assets/logo.png" alt="Koin" class="hero-nav-logo">
           </a>
           <div class="hero-nav-actions">
-            <a class="btn btn-outline btn-nav" href="Components/login.html">Iniciar sesión</a>
-            <a class="btn btn-primary btn-nav" href="Components/register.html">Comenzar ahora</a>
+            <a class="btn btn-outline btn-nav" href="#" data-open-auth="login">Iniciar sesión</a>
+            <a class="btn btn-primary btn-nav" href="#" data-open-auth="register">Comenzar ahora</a>
           </div>
         </nav>
 
@@ -30,8 +30,8 @@
             <img src="assets/logo.png" alt="Koin" class="hero-nav-logo">
           </a>
           <div class="hero-nav-actions">
-            <a class="btn btn-outline btn-nav" href="Components/login.html">Iniciar sesión</a>
-            <a class="btn btn-primary btn-nav" href="Components/register.html">Comenzar ahora</a>
+            <a class="btn btn-outline btn-nav" href="#" data-open-auth="login">Iniciar sesión</a>
+            <a class="btn btn-primary btn-nav" href="#" data-open-auth="register">Comenzar ahora</a>
           </div>
         </nav>
 
@@ -44,8 +44,8 @@
           <h3 class="hero-subtitle">Una plataforma diseñada para familias que quieren controlar gastos, presupuestos y metas sin perder tiempo.</h3>
           <p class="hero-lead">Koin te da una visión ordenada de cada movimiento, con alertas claras, categorías inteligentes y un panel fácil de usar.</p>
           <div class="hero-actions">
-            <a class="btn btn-primary btn-cta" href="Components/register.html">Comenzar ahora</a>
-            <a class="btn btn-outline" href="Components/login.html">Iniciar sesión</a>
+            <a class="btn btn-primary btn-cta" href="#" data-open-auth="register">Comenzar ahora</a>
+            <a class="btn btn-outline" href="#" data-open-auth="login">Iniciar sesión</a>
           </div>
         </div>
       </div>
@@ -134,10 +134,68 @@
         <div class="container cta-content">
           <h2>Comienza a Gestionar tus Finanzas Hoy</h2>
           <p>Unete a miles de familias que ya controlan sus finanzas de manera inteligente.</p>
-          <a class="btn btn-primary" href="Components/login.html">Empezar Gratis</a>
+          <a class="btn btn-primary" href="#" data-open-auth="register">Empezar Gratis</a>
         </div>
       </section>
     </main>
+
+    <div class="auth-overlay" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="auth-dialog-title">
+      <div class="auth-modal" role="document">
+        <button type="button" class="auth-close" data-close-auth aria-label="Cerrar ventana">×</button>
+
+        <section class="auth-card auth-login is-active" aria-labelledby="login-title">
+          <h1 id="login-title">Iniciar Sesión</h1>
+          <p class="auth-subtitle">Accede a tu cuenta de finanzas familiares</p>
+
+          <form id="login-form" class="auth-form" data-auth-form novalidate>
+            <div class="form-field">
+              <label for="login-email">Email</label>
+              <input id="login-email" name="email" type="email" autocomplete="email" placeholder="tu@email.com" required pattern="^[^@\s]+@[^@\s]+\.[^@\s]+$">
+            </div>
+            <div class="form-field">
+              <label for="login-password">Contraseña</label>
+              <input id="login-password" name="password" type="password" autocomplete="current-password" minlength="6" placeholder="******" required>
+            </div>
+            <button class="btn btn-primary btn-full" type="submit">Iniciar Sesión</button>
+            <p id="login-message" class="form-message" role="status" aria-live="polite"></p>
+          </form>
+
+          <p class="auth-switch">
+            ¿No tienes cuenta? <a href="#" data-open-auth="register">Regístrate</a>
+          </p>
+        </section>
+
+        <section class="auth-card auth-register" aria-labelledby="register-title">
+          <h1 id="register-title">Regístrate</h1>
+          <p class="auth-subtitle">Crea tu cuenta para comenzar a gestionar tus finanzas</p>
+
+          <form id="register-form" class="auth-form" data-auth-form novalidate>
+            <div class="form-field">
+              <label for="register-name">Nombre completo</label>
+              <input id="register-name" name="name" type="text" autocomplete="name" minlength="3" placeholder="Tu nombre" required>
+            </div>
+            <div class="form-field">
+              <label for="register-email">Email</label>
+              <input id="register-email" name="email" type="email" autocomplete="email" placeholder="tu@email.com" required pattern="^[^@\s]+@[^@\s]+\.[^@\s]+$">
+            </div>
+            <div class="form-field">
+              <label for="register-password">Contraseña</label>
+              <input id="register-password" name="password" type="password" autocomplete="new-password" minlength="6" placeholder="Mínimo 6 caracteres" required>
+            </div>
+            <div class="form-field">
+              <label for="register-password-confirm">Confirmar contraseña</label>
+              <input id="register-password-confirm" name="passwordConfirm" type="password" autocomplete="new-password" minlength="6" placeholder="Repite tu contraseña" required>
+            </div>
+            <button class="btn btn-primary btn-full" type="submit">Crear Cuenta</button>
+            <p id="register-message" class="form-message" role="status" aria-live="polite"></p>
+          </form>
+
+          <p class="auth-switch">
+            ¿Ya tienes cuenta? <a href="#" data-open-auth="login">Inicia sesión</a>
+          </p>
+        </section>
+      </div>
+    </div>
 
     <script src="js/runtime-config.js"></script>
     <script src="js/config.js"></script>

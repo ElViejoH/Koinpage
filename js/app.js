@@ -19,6 +19,8 @@ document.addEventListener("click", function (event) {
 });
 
 initSessionFlow();
+initAuthModals();
+initAuthModalFromUrl();
 initAuthForms();
 initHeroScroll();
 initAppMainMenu();

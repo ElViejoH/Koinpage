@@ -4,8 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "start": "node server/index.js",
-    "dev": "node --watch server/index.js",
+    "start": "node --env-file=.env server/index.js",
+    "dev": "node --env-file=.env --watch server/index.js",
     "build:frontend": "node scripts/build-frontend.mjs",
     "db:schema": "node scripts/apply-schema.mjs",
     "db:import-lowdb": "node scripts/import-lowdb.mjs"

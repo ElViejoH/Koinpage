@@ -8,12 +8,12 @@ function initSessionFlow() {
   const protectedPages = ["dashboard", "members", "transactions", "budgets"];
 
   if (protectedPages.includes(page) && !session) {
-    window.location.href = "login.html";
+    window.location.href = getHomeAuthUrl("login");
     return;
   }
 
-  if (page === "login" && session) {
-    window.location.href = "dashboard.html";
+  if ((page === "login" || page === "register") && session) {
+    window.location.href = getDashboardUrl();
     return;
   }
 
@@ -61,10 +61,10 @@ function bindHeaderSession(session) {
       api.auth
         .logout()
         .then(function () {
-          window.location.href = "login.html";
+          window.location.href = getHomeAuthUrl("login");
         })
         .catch(function () {
-          window.location.href = "login.html";
+          window.location.href = getHomeAuthUrl("login");
         });
     });
   }

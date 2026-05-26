@@ -2,6 +2,101 @@
 
 // ===== Global auth and shared UI behavior =====
 // Maneja autenticación de formularios y comportamientos compartidos de navegación/feedback visual.
+function isInComponentsFolder() {
+  return window.location.pathname.includes("/Components/");
+}
+
+function getDashboardUrl() {
+  return isInComponentsFolder() ? "dashboard.html" : "Components/dashboard.html";
+}
+
+function getHomeAuthUrl(type) {
+  const authType = type === "register" ? "register" : "login";
+  return isInComponentsFolder() ? "../index.html?auth=" + authType : "index.html?auth=" + authType;
+}
+
+function openAuthModal(type) {
+  const overlay = document.querySelector(".auth-overlay");
+  if (!overlay) {
+    window.location.href = getHomeAuthUrl(type);
+    return;
+  }
+
+  const loginPanel = overlay.querySelector(".auth-login");
+  const registerPanel = overlay.querySelector(".auth-register");
+  const panelType = type === "register" ? "register" : "login";
+
+  if (loginPanel) loginPanel.classList.toggle("is-active", panelType === "login");
+  if (registerPanel) registerPanel.classList.toggle("is-active", panelType === "register");
+
+  overlay.classList.add("is-open");
+  document.body.classList.add("modal-open");
+  overlay.setAttribute("aria-hidden", "false");
+
+  const titleId = panelType === "register" ? "register-title" : "login-title";
+  overlay.setAttribute("aria-labelledby", titleId);
+
+  const activeInput = overlay.querySelector(".auth-card.is-active input");
+  if (activeInput) activeInput.focus();
+}
+
+function closeAuthModal() {
+  const overlay = document.querySelector(".auth-overlay");
+  if (!overlay) return;
+
+  overlay.classList.remove("is-open");
+  document.body.classList.remove("modal-open");
+  overlay.setAttribute("aria-hidden", "true");
+}
+
+function initAuthModals() {
+  const overlay = document.querySelector(".auth-overlay");
+  if (!overlay) return;
+
+  const openButtons = document.querySelectorAll("[data-open-auth]");
+  const closeButtons = overlay.querySelectorAll("[data-close-auth], .auth-close");
+
+  openButtons.forEach(function (button) {
+    button.addEventListener("click", function (event) {
+      event.preventDefault();
+      const type = String(button.dataset.openAuth || "login");
+      openAuthModal(type);
+    });
+  });
+
+  closeButtons.forEach(function (button) {
+    button.addEventListener("click", function () {
+      closeAuthModal();
+    });
+  });
+
+  overlay.addEventListener("click", function (event) {
+    if (event.target === overlay) {
+      closeAuthModal();
+    }
+  });
+
+  document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape" && overlay.classList.contains("is-open")) {
+      closeAuthModal();
+    }
+  });
+}
+
+function initAuthModalFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const auth = params.get("auth");
+  if (auth !== "login" && auth !== "register") return;
+
+  if (typeof getSession === "function" && getSession()) {
+    window.location.href = getDashboardUrl();
+    return;
+  }
+
+  openAuthModal(auth);
+  history.replaceState({}, document.title, window.location.pathname);
+}
+
 function initAuthForms() {
   const forms = document.querySelectorAll("[data-auth-form]");
   if (!forms.length) return;
@@ -41,7 +136,7 @@ function initAuthForms() {
         api.auth
           .login(email, password)
           .then(function () {
-            window.location.href = "dashboard.html";
+            window.location.href = getDashboardUrl();
           })
           .catch(function (err) {
             showMessage(message, err && err.message ? err.message : "No se pudo iniciar sesión.", true);
@@ -69,7 +164,7 @@ function initAuthForms() {
         api.auth
           .register(name, email, password)
           .then(function () {
-            window.location.href = "dashboard.html";
+            window.location.href = getDashboardUrl();
           })
           .catch(function (err) {
             showMessage(message, err && err.message ? err.message : "No se pudo registrar.", true);
